@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Day Arc \u2014 personal daily routine tracker, deployed on Vercel with Upstash Redis storage.",
+  "description": "Day Arc \u2014 personal daily routine tracker, deployed on Vercel with Postgres (Neon) storage.",
   "dependencies": {
-    "@upstash/redis": "^1.34.3"
+    "@vercel/postgres": "^0.10.0"
   }
 }
