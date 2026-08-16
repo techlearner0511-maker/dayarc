@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day Arc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --ink: #F3EEE3;
+    --dim: #B9B2A0;
+    --bg-deep: #14152B;
+    --bg-mid: #241E3F;
+    --dawn: #E8A33D;
+    --dusk: #E86A5C;
+    --sage: #7F9A82;
+    --blue: #6C8FC7;
+    --line: rgba(243,238,227,0.14);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-mid) 100%);
+    color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif;
+    padding: 24px 18px 60px;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 30px;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .sub { color: var(--dim); font-size: 14px; margin-bottom: 18px; }
+
+  .tabs {
+    display: flex; gap: 6px; margin-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .tab {
+    padding: 10px 16px; font-size: 14px; color: var(--dim);
+    cursor: pointer; border-bottom: 2px solid transparent;
+    font-weight: 500;
+  }
+  .tab.active { color: var(--ink); border-bottom-color: var(--dawn); }
+
+  .streak-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .streak-pill {
+    background: rgba(243,238,227,0.06);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 13px;
+    color: var(--dim);
+  }
+  .streak-pill b { color: var(--dawn); font-weight: 600; }
+
+  .section {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    margin-bottom: 14px;
+    overflow: hidden;
+    background: rgba(243,238,227,0.03);
+  }
+  .section.active { border-color: var(--dawn); }
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 16px;
+  }
+  .section-title { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 600; }
+  .section-time { font-size: 11.5px; color: var(--dim); font-variant-numeric: tabular-nums; }
+  .now-tag {
+    font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
+    background: var(--dawn); color: #1B1220; padding: 3px 8px; border-radius: 999px;
+    margin-left: 8px; font-weight: 600;
+  }
+  .items { padding: 0 16px 12px; display: flex; flex-direction: column; gap: 2px; }
+  .item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 4px;
+    border-bottom: 1px solid rgba(243,238,227,0.06);
+    cursor: pointer; user-select: none;
+  }
+  .item:last-child { border-bottom: none; }
+  .box {
+    width: 18px; height: 18px; border-radius: 5px;
+    border: 1.5px solid var(--dim);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .item.done .box { background: var(--sage); border-color: var(--sage); }
+  .item.done .box::after { content: '✓'; font-size: 11px; color: #14152B; font-weight: 700; }
+  .item span.label { font-size: 13.5px; }
+  .item.done span.label { color: var(--dim); text-decoration: line-through; text-decoration-color: rgba(185,178,160,0.5); }
+  .item .note { font-size: 11px; color: var(--dim); margin-left: auto; opacity: .75; white-space: nowrap; }
+
+  .day-badge {
+    display: inline-block; font-size: 11px; letter-spacing: .05em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 999px; margin-bottom: 14px; font-weight: 600;
+  }
+
+  .level-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .level-btn {
+    padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line);
+    background: rgba(243,238,227,0.04); color: var(--dim); font-size: 12.5px; cursor: pointer;
+  }
+  .level-btn.sel { border-color: var(--blue); color: var(--ink); background: rgba(108,143,199,0.15); }
+  .level-detail { font-size: 12.5px; color: var(--dim); margin-bottom: 18px; line-height: 1.5; }
+
+  .reset-row { text-align: center; margin-top: 24px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .reset-btn {
+    background: none; border: 1px solid var(--line); color: var(--dim);
+    font-family: 'Space Grotesk', sans-serif; font-size: 12px;
+    padding: 8px 16px; border-radius: 999px; cursor: pointer;
+  }
+  .reset-btn:hover { border-color: var(--dusk); color: var(--dusk); }
+
+  .add-box {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 16px;
+    background: rgba(243,238,227,0.03);
+  }
+  .add-box textarea {
+    width: 100%; min-height: 64px; resize: vertical;
+    background: rgba(243,238,227,0.05); border: 1px solid var(--line);
+    border-radius: 8px; color: var(--ink); font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px; padding: 8px; margin-bottom: 8px;
+  }
+  .add-box .hint { font-size: 11px; color: var(--dim); margin-bottom: 8px; }
+  .add-box input[type="text"], .add-box input[type="number"] {
+    width: 100%; background: rgba(243,238,227,0.05); border: 1px solid var(--line);
+    border-radius: 8px; color: var(--ink); font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px; padding: 8px; margin-bottom: 8px;
+  }
+  .add-row { display: flex; gap: 8px; }
+  .add-row input[type="number"] { width: 90px; flex-shrink: 0; }
+  .add-btn { flex-shrink: 0; }
+  .add-btn {
+    background: var(--dawn); color: #1B1220; border: none;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12.5px;
+    padding: 8px 16px; border-radius: 999px; cursor: pointer;
+  }
+  .item .del-btn {
+    margin-left: auto; color: var(--dim); font-size: 15px; cursor: pointer;
+    padding: 2px 6px; flex-shrink: 0;
+  }
+  .item .del-btn:hover { color: var(--dusk); }
+  .working-tag {
+    font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase;
+    background: rgba(108,143,199,0.18); color: var(--blue); border: 1px solid rgba(108,143,199,0.4);
+    padding: 2px 7px; border-radius: 999px; margin-left: 8px; font-weight: 600; white-space: nowrap;
+  }
+  .item-actions { margin-left: auto; display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+  .item-actions .work-btn {
+    cursor: pointer; font-size: 14px; color: var(--dim); padding: 2px 6px; line-height: 1;
+  }
+  .item-actions .work-btn.on { color: var(--blue); }
+  .item-actions .work-btn:hover { color: var(--blue); }
+  .item.working { background: rgba(108,143,199,0.05); border-radius: 8px; }
+  .empty-note { font-size: 13px; color: var(--dim); padding: 10px 4px; }
+  .counter-controls { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
+  .counter-btn {
+    width: 24px; height: 24px; border-radius: 50%;
+    border: 1px solid var(--line); background: rgba(243,238,227,0.05);
+    color: var(--ink); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; user-select: none; flex-shrink: 0;
+  }
+  .counter-btn:hover { border-color: var(--dawn); color: var(--dawn); }
+  .counter-count { font-variant-numeric: tabular-nums; font-size: 12.5px; min-width: 44px; text-align: center; color: var(--dim); }
+  .item.done .counter-count { color: var(--sage); }
+  .counter-bar-track {
+    height: 6px; border-radius: 3px; width: 100%;
+    background: rgba(243,238,227,0.08); overflow: hidden;
+  }
+  .counter-bar-fill { height: 100%; border-radius: 3px; transition: width .2s ease; }
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1>Day Arc</h1>
+  <div class="sub" id="dateLabel">Loading…</div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="routine">Routine</div>
+    <div class="tab" data-tab="cycles">Cycles</div>
+  </div>
+
+  <div class="streak-row" id="streakRow"></div>
+  <div id="tabContent"></div>
+
+  <div class="reset-row">
+    <button class="reset-btn" id="resetBtn">Reset today's checks</button>
+    <button class="reset-btn" id="exportBtn">Export backup</button>
+    <button class="reset-btn" id="importBtn">Import backup</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none">
+  </div>
+</div>
+
+<script>
+// ---------- SERVER STORAGE CLIENT ----------
+// Talks to /api/kv, a Vercel serverless function backed by Upstash Redis.
+// Same get/set/delete/list shape as the old localStorage shim, so nothing
+// else in this file needs to change.
+const API_BASE = '/api/kv';
+const AUTH_KEY = 'dayarc_passcode'; // stored in localStorage, sent as a header
+
+function authHeaders() {
+  const code = localStorage.getItem(AUTH_KEY);
+  return code ? { 'x-day-arc-key': code } : {};
+}
+
+async function apiRequest(method, params, body) {
+  const url = new URL(API_BASE, location.origin);
+  Object.entries(params || {}).forEach(([k, v]) => {
+    if (v !== undefined && v !== null) url.searchParams.set(k, v);
+  });
+  const res = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (res.status === 401) {
+    // Passcode missing/wrong — ask once and retry.
+    const code = prompt('Enter your Day Arc passcode:');
+    if (code) {
+      localStorage.setItem(AUTH_KEY, code);
+      return apiRequest(method, params, body);
+    }
+    throw new Error('unauthorized');
+  }
+  if (!res.ok) throw new Error(`storage error (${res.status})`);
+  return res.json();
+}
+
+window.storage = {
+  async get(key, shared = false) {
+    return apiRequest('GET', { action: 'get', key, shared: shared ? '1' : '0' });
+  },
+  async set(key, value, shared = false) {
+    return apiRequest('POST', {}, { action: 'set', key, value, shared });
+  },
+  async delete(key, shared = false) {
+    return apiRequest('POST', {}, { action: 'delete', key, shared });
+  },
+  async list(prefix = '', shared = false) {
+    return apiRequest('GET', { action: 'list', prefix, shared: shared ? '1' : '0' });
+  }
+};
+
+// ---------- BACKUP: EXPORT / IMPORT ----------
+async function exportBackup() {
+  const dump = {};
+  const { keys } = await window.storage.list('', false);
+  for (const k of keys) {
+    const res = await window.storage.get(k, false);
+    if (res) dump[k] = res.value;
+  }
+  const blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `day-arc-backup-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function importBackup(file) {
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      const dump = JSON.parse(reader.result);
+      if (!confirm('This will overwrite your current data with the backup file. Continue?')) return;
+      for (const key of Object.keys(dump)) {
+        await window.storage.set(key, dump[key], false);
+      }
+      alert('Backup restored. Reloading…');
+      location.reload();
+    } catch (e) {
+      alert('Could not read that file — is it a Day Arc backup JSON?');
+    }
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById('exportBtn').addEventListener('click', exportBackup);
+document.getElementById('importBtn').addEventListener('click', () => {
+  document.getElementById('importFile').click();
+});
+document.getElementById('importFile').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) importBackup(file);
+  e.target.value = '';
+});
+
+const ROUTINE_PREFIX = 'routine:';
+const SETTINGS_KEY = 'settings';
+
+function todayKey(d) { return ROUTINE_PREFIX + d.toISOString().slice(0,10); }
+
+const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const DAY_COLORS = ['#B9B2A0','#E86A5C','#6C8FC7','#7F9A82','#E8A33D','#B07FC7','#E8C93D'];
+
+// ---------- ROUTINE TAB ----------
+function routineSections(d) {
+  const sal = (d.getDay() === 1 || d.getDay() === 3 || d.getDay() === 5);
+  const hairDay = (d.getDay() === 1 || d.getDay() === 4 || d.getDay() === 6);
+  const secs = [
+    { id:'morning', title:'Morning Ritual', start:6*60+5, end:7*60, items:[
+      {id:'day_planning', label:'Day planning'},
+      {id:'sun', label:'Look toward sun', note:'5 min'},
+      {id:'meditate', label:'Meditation'},
+      {id:'m_workout_check', label:'Workout'},
+      {id:'chess', label:'Chess'},
+      {id:'mew', label:'Start mewing'},
+      {id:'bed', label:'Bed lagao'},
+      {id:'glasses', label:'Clean glasses'},
+      {id:'gmail_am', label:'Gmail check'},
+    ]},
+    { id:'skincare_am', title:'Skincare — Morning', start:6*60, end:6*60+30, items:[
+      {id:'am_lipbalm', label:'Lip balm'},
+      {id:'am_cleanser', label: sal ? 'Salicylic cleanser' : 'Gentle cleanser', note: sal ? '3x/week — today' : ''},
+      {id:'am_vitc', label:'Vitamin C'},
+      {id:'am_sunscreen', label:'Sunscreen'},
+    ]},
+    { id:'college', title:'College', start:7*60, end:18*60, items:[] },
+    { id:'evening1', title:'Work + Journal', start:18*60, end:20*60, items:[
+      {id:'study1', label:'Work'},
+      {id:'journal', label:'Review journal — write topics'},
+    ]},
+    { id:'dinner', title:'Dinner + Shower', start:20*60, end:21*60, items:[
+      {id:'dinner', label:'Dinner'},
+      {id:'shower', label:'Shower', note:'90 min before bed'},
+    ]},
+    { id:'evening2', title:'Work Block', start:21*60, end:22*60, items:[
+      {id:'study2', label:'Work'},
+    ]},
+    { id:'skincare_pm', title:'Skincare — Night', start:21*60+30, end:22*60, items:[
+      {id:'pm_cleanser', label: sal ? 'Salicylic cleanser' : 'Gentle cleanser', note: sal ? '3x/week — today' : ''},
+      {id:'pm_vaseline', label:'Vaseline on eyes and lips'},
+      {id:'pm_moist', label:'Moisturizer'},
+      {id:'pm_tongue', label:'Tongue cleaner'},
+    ]},
+  ];
+  if (hairDay) {
+    secs.push({ id:'haircare', title:'Haircare', start:20*60, end:20*60+20, items:[
+      {id:'hc_shampoo', label:'Shampoo'},
+      {id:'hc_conditioner', label:'Conditioner'},
+    ]});
+  }
+  secs.push({ id:'recovery', title:'Night Recovery (10–15 min)', start:22*60, end:22*60+15, items:[
+    {id:'r_cobra', label:'Cobra Pose', note:'3×30s'},
+    {id:'r_pushup', label:'Push-ups', note:'2–4 sets'},
+    {id:'r_stretch', label:'Full body stretching', note:'5–10 min'},
+    {id:'r_box', label:'Box breathing', note:'5 min'},
+    {id:'r_book_pick', label:'Pick a complicated book', note:'comm skill'},
+    {id:'r_book_read', label:'Read a paragraph', note:'comm skill'},
+    {id:'r_book_type', label:'Type your interpretation', note:'comm skill'},
+    {id:'r_book_ai_flaws', label:'Feed original + interpretation to AI', note:'find flaws/missed'},
+    {id:'r_book_final', label:'Write final interpretation with AI', note:'comm skill'},
+    {id:'r_book_audio_en', label:'Record audio — English', note:'comm skill'},
+    {id:'r_book_audio_hi', label:'Record audio — Hindi', note:'comm skill'},
+  ]});
+  return secs;
+}
+
+const WEEKLY_TASKS = [
+  {id:'su_table', label:'Table cleaning'},
+  {id:'su_college', label:'Revise college study'},
+  {id:'su_coding', label:'Revise coding'},
+  {id:'su_notes', label:'Digitalise notes'},
+  {id:'su_scrub', label:'Skin scrubbing'},
+  {id:'su_steam', label:'Face steam'},
+  {id:'su_hygiene', label:'Hygiene cleaning'},
+  {id:'su_ghee', label:'Ghee on lips'},
+  {id:'su_inversion', label:'Upside-down head massage'},
+  {id:'su_cooking', label:'Learn more cooking'},
+  {id:'su_hair', label:'Hair removal'},
+  {id:'su_bathroom', label:'Clean bathroom'},
+  {id:'su_fan', label:'Clean fan'},
+  {id:'su_pillow', label:'Wash pillowcase'},
+  {id:'su_sprint', label:'Sprinting'},
+  {id:'su_sports', label:'Play athletic sports'},
+];
+
+// ---------- CYCLES TAB (bi-weekly + monthly) ----------
+const BIWEEKLY_ANCHOR = new Date(2026, 6, 19); // July 19, 2026
+const BIWEEKLY_TASKS = [
+  {id:'bw_nails', label:'Nail cutting'},
+  {id:'bw_scooty', label:'Scooty cleaning'},
+  {id:'bw_disinfect', label:'Disinfect razors/hygiene items', note:'warm water, 10 min'},
+  {id:'bw_nightlight', label:'Increase night light slightly'},
+  {id:'bw_saltwater', label:'Saltwater teeth rinse'},
+  {id:'bw_fast', label:'Fast', note:'half or full day'},
+];
+const BIWEEKLY_FOOD_CYCLE = [
+  'Burger', 'Spring Roll', 'Kurkure', 'Chocolate', 'Dosa/idli', 'Soups',
+  'Chole Bhature', 'Pizza', 'Momos', 'Ice Creams', 'Chole Kulche', 'Chowmein',
+  'Cheese Balls', 'Jalebi', 'Aloo Tikki', 'Pasta', 'Chilli Potato', 'Aloo Bhujia',
+  'Bhel Puri', 'Kathi Roll', 'Instant Noodles', 'Cream Biscuits', 'Pakoda',
+  'French Fries', 'Golgappa', 'Pav Bhaji',
+];
+function biweeklyFoodForCycle(cycleNum) {
+  const len = BIWEEKLY_FOOD_CYCLE.length;
+  const idx = ((cycleNum % len) + len) % len;
+  return BIWEEKLY_FOOD_CYCLE[idx];
+}
+const MONTHLY_TASKS = [
+  {id:'mo_earwax', label:'Clean ear wax'},
+  {id:'mo_devices', label:'Devices cleaning'},
+  {id:'mo_accounts', label:'Account cleaning / socials'},
+  {id:'mo_room', label:'Room cleaning'},
+  {id:'mo_resume', label:'Resume update'},
+  {id:'mo_linkedin', label:'LinkedIn profile update'},
+  {id:'mo_music', label:'Music updation'},
+  {id:'mo_icing', label:'Face icing', note:'optional'},
+];
+
+function stripTime(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+
+function biweeklyCycleInfo(d) {
+  const today = stripTime(d);
+  const anchor = stripTime(BIWEEKLY_ANCHOR);
+  const diffDays = Math.round((today - anchor) / 86400000);
+  if (diffDays < 0) return { isDue: false, cycleNum: -1, daysUntil: -diffDays };
+  const cycleNum = Math.floor(diffDays / 14);
+  const isDue = diffDays % 14 === 0;
+  const daysUntil = isDue ? 0 : (14 - (diffDays % 14));
+  return { isDue, cycleNum, daysUntil };
+}
+
+function weeklyCycleInfo(d) {
+  const today = stripTime(d);
+  const isDue = today.getDay() === 0;
+  const daysUntil = isDue ? 0 : (7 - today.getDay());
+  // ISO-ish week key: use the date of the Sunday this task belongs to
+  const sunday = new Date(today);
+  sunday.setDate(today.getDate() - today.getDay());
+  const weekKey = sunday.toISOString().slice(0,10);
+  return { isDue, daysUntil, weekKey };
+}
+
+function firstSundayOfMonth(year, month) {
+  const d = new Date(year, month, 1);
+  const offset = (7 - d.getDay()) % 7;
+  return new Date(year, month, 1 + offset);
+}
+
+function monthlyCycleInfo(d) {
+  const today = stripTime(d);
+  const fs = stripTime(firstSundayOfMonth(d.getFullYear(), d.getMonth()));
+  const isDue = today.getTime() === fs.getTime();
+  let daysUntil = 0;
+  if (!isDue) {
+    if (today < fs) {
+      daysUntil = Math.round((fs - today) / 86400000);
+    } else {
+      const nextFs = stripTime(firstSundayOfMonth(d.getMonth() === 11 ? d.getFullYear()+1 : d.getFullYear(), (d.getMonth()+1) % 12));
+      daysUntil = Math.round((nextFs - today) / 86400000);
+    }
+  }
+  return { isDue, daysUntil, monthKey: `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}` };
+}
+
+async function loadCycleState(key) {
+  try {
+    const res = await window.storage.get(key, false);
+    return res && res.value ? JSON.parse(res.value) : {};
+  } catch (e) { return {}; }
+}
+
+let cycleSaveChain = Promise.resolve();
+
+async function saveCycleState(key, obj) {
+  const snapshot = JSON.stringify(obj);
+  cycleSaveChain = cycleSaveChain.then(async () => {
+    try { await window.storage.set(key, snapshot, false); }
+    catch (e) { storageOk = false; }
+  });
+  await cycleSaveChain;
+}
+
+let cycleState = {};
+
+async function renderCyclesTab(d) {
+  const bw = biweeklyCycleInfo(d);
+  const wk = weeklyCycleInfo(d);
+  const mo = monthlyCycleInfo(d);
+  let html = '';
+
+  if (bw.isDue) {
+    const key = `biweekly:${bw.cycleNum}`;
+    if (!(key in cycleState)) cycleState[key] = await loadCycleState(key);
+    const localState = cycleState[key] || {};
+    html += `<div class="day-badge" style="background:#E86A5C22; color:#E86A5C; border:1px solid #E86A5C55;">Bi-weekly — due today</div>`;
+    html += `<div class="section active"><div class="section-head"><div class="section-title">Bi-weekly Tasks</div></div><div class="items">`;
+    BIWEEKLY_TASKS.forEach(item => {
+      const done = !!localState[item.id];
+      html += `<div class="item ${done?'done':''}" data-cycle="biweekly" data-ckey="${key}" data-id="${item.id}">
+        <div class="box"></div><span class="label">${item.label}</span>${item.note?`<span class="note">${item.note}</span>`:''}</div>`;
+    });
+    const foodItem = { id: 'bw_food', label: `Food: ${biweeklyFoodForCycle(bw.cycleNum)}` };
+    const foodDone = !!localState[foodItem.id];
+    html += `<div class="item ${foodDone?'done':''}" data-cycle="biweekly" data-ckey="${key}" data-id="${foodItem.id}">
+        <div class="box"></div><span class="label">${foodItem.label}</span></div>`;
+    html += `</div></div>`;
+  } else {
+    html += `<div class="level-detail">Bi-weekly tasks next due in <b>${bw.daysUntil}</b> day(s)${bw.cycleNum < 0 ? ' (starts July 19, 2026)' : ''}.</div>`;
+  }
+
+  if (wk.isDue) {
+    const key = `weekly:${wk.weekKey}`;
+    if (!(key in cycleState)) cycleState[key] = await loadCycleState(key);
+    const localState = cycleState[key] || {};
+    html += `<div class="day-badge" style="background:#6C8FC722; color:#6C8FC7; border:1px solid #6C8FC755;">Weekly — every Sunday</div>`;
+    html += `<div class="section active"><div class="section-head"><div class="section-title">Weekly Tasks</div></div><div class="items">`;
+    WEEKLY_TASKS.forEach(item => {
+      const done = !!localState[item.id];
+      html += `<div class="item ${done?'done':''}" data-cycle="weekly" data-ckey="${key}" data-id="${item.id}">
+        <div class="box"></div><span class="label">${item.label}</span>${item.note?`<span class="note">${item.note}</span>`:''}</div>`;
+    });
+    html += `</div></div>`;
+  } else {
+    html += `<div class="level-detail">Weekly tasks next due in <b>${wk.daysUntil}</b> day(s) — every Sunday.</div>`;
+  }
+
+  if (mo.isDue) {
+    const key = `monthly:${mo.monthKey}`;
+    if (!(key in cycleState)) cycleState[key] = await loadCycleState(key);
+    const localState = cycleState[key] || {};
+    html += `<div class="day-badge" style="background:#E8A33D22; color:#E8A33D; border:1px solid #E8A33D55;">Monthly — first Sunday</div>`;
+    html += `<div class="section active"><div class="section-head"><div class="section-title">Monthly Tasks</div></div><div class="items">`;
+    MONTHLY_TASKS.forEach(item => {
+      const done = !!localState[item.id];
+      html += `<div class="item ${done?'done':''}" data-cycle="monthly" data-ckey="${key}" data-id="${item.id}">
+        <div class="box"></div><span class="label">${item.label}</span>${item.note?`<span class="note">${item.note}</span>`:''}</div>`;
+    });
+    html += `</div></div>`;
+  } else {
+    html += `<div class="level-detail">Monthly tasks next due in <b>${mo.daysUntil}</b> day(s) — first Sunday of the month.</div>`;
+  }
+
+  return html;
+}
+
+let state = {};
+let settings = { level: 1 };
+let customTasks = []; // kept for storage backward-compat, unused in UI now
+let storageOk = true;
+let activeTab = 'routine';
+
+const EXTRAS_KEY = 'extras_persistent';
+
+async function loadAll() {
+  const key = todayKey(new Date());
+  try {
+    const res = await window.storage.get(key, false);
+    state = res && res.value ? JSON.parse(res.value) : {};
+  } catch (e) { state = {}; }
+  try {
+    const res = await window.storage.get(SETTINGS_KEY, false);
+    settings = res && res.value ? JSON.parse(res.value) : { level: 1 };
+  } catch (e) { settings = { level: 1 }; }
+}
+
+// Serialize all saves through one chain so overlapping clicks can't race:
+// each save waits for the previous one to finish, and always sends whatever
+// `state` looks like at the moment it actually runs (not when it was queued).
+let saveChain = Promise.resolve();
+
+async function saveState() {
+  const key = todayKey(new Date());
+  const snapshot = JSON.stringify(state);
+  saveChain = saveChain.then(async () => {
+    try { await window.storage.set(key, snapshot, false); }
+    catch (e) { storageOk = false; }
+  });
+  await saveChain;
+}
+
+async function saveSettings() {
+  try { await window.storage.set(SETTINGS_KEY, JSON.stringify(settings), false); }
+  catch (e) { storageOk = false; }
+}
+
+function minsNow() { const d = new Date(); return d.getHours()*60 + d.getMinutes(); }
+
+function toggle(id) { state[id] = !state[id]; saveState(); render(); }
+
+function fmtTime(mins) {
+  const h = Math.floor(mins/60), m = mins%60;
+  const ampm = h < 12 ? 'AM' : 'PM';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${m.toString().padStart(2,'0')} ${ampm}`;
+}
+
+function itemRow(item) {
+  const done = !!state[item.id];
+  return `<div class="item ${done?'done':''}" data-id="${item.id}">
+    <div class="box"></div>
+    <span class="label">${item.label}</span>
+    ${item.note ? `<span class="note">${item.note}</span>` : ''}
+  </div>`;
+}
+
+function sectionBlock(sec, now) {
+  const isActive = now >= sec.start && now < sec.end;
+  return `<div class="section ${isActive?'active':''}">
+    <div class="section-head">
+      <div class="section-title">${sec.title}</div>
+      <div class="section-time">${fmtTime(sec.start)}–${fmtTime(sec.end)} ${isActive?'<span class="now-tag">Now</span>':''}</div>
+    </div>
+    <div class="items">${sec.items.map(itemRow).join('')}</div>
+  </div>`;
+}
+
+function renderRoutineTab(d, now) {
+  let secs = routineSections(d);
+  return secs.map(s => sectionBlock(s, now)).join('');
+}
+
+async function render() {
+  const now = minsNow();
+  const d = new Date();
+  document.getElementById('dateLabel').textContent = d.toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'});
+
+  let html = '';
+  if (activeTab === 'routine') html = renderRoutineTab(d, now);
+  else html = await renderCyclesTab(d);
+
+  document.getElementById('tabContent').innerHTML = html;
+
+  document.querySelectorAll('.item').forEach(el => {
+    if (el.dataset.cycle) {
+      el.addEventListener('click', () => {
+        const key = el.dataset.ckey, id = el.dataset.id;
+        if (!cycleState[key]) cycleState[key] = {};
+        cycleState[key][id] = !cycleState[key][id];
+        saveCycleState(key, cycleState[key]);
+        render();
+      });
+    } else {
+      el.addEventListener('click', () => toggle(el.dataset.id));
+    }
+  });
+  document.querySelectorAll('.del-btn').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  });
+  // streak / progress across whatever the current tab's items are
+  let totalItems = 0, doneItems = 0;
+  document.querySelectorAll('.item').forEach(el => {
+    totalItems++;
+    if (el.dataset.cycle) {
+      const s = cycleState[el.dataset.ckey] || {};
+      if (s[el.dataset.id]) doneItems++;
+    } else if (state[el.dataset.id]) {
+      doneItems++;
+    }
+  });
+  const pct = totalItems ? Math.round((doneItems/totalItems)*100) : 0;
+  document.getElementById('streakRow').innerHTML = `
+    <div class="streak-pill"><b>${doneItems}/${totalItems}</b> done</div>
+    <div class="streak-pill"><b>${pct}%</b> complete</div>
+    ${!storageOk ? '<div class="streak-pill">Saving offline — check may not persist</div>' : ''}
+  `;
+}
+
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    activeTab = t.dataset.tab;
+    render();
+  });
+});
+
+document.getElementById('resetBtn').addEventListener('click', async () => {
+  state = {};
+  await saveState();
+  render();
+});
+
+(async () => {
+  await loadAll();
+  render();
+  setInterval(render, 60000);
+})();
+</script>
+</body>
+</html>
